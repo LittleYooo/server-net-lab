@@ -10,7 +10,15 @@
  * @param buf 要处理的数据包
  */
 void ethernet_in(buf_t *buf) {
-    // TO-DO
+    ether_hdr_t *ether_hdr = (ether_hdr_t *)buf->data;
+    uint16_t protocol = swap16(ether_hdr->protocol16);
+
+    if (protocol <= 1500 && buf->len < protocol) {
+        // protocol字段表示数据帧长度
+        return;
+    }
+    buf_remove_header(buf, sizeof(ether_hdr_t));
+    net_in(buf, protocol, ether_hdr->src);
 }
 /**
  * @brief 处理一个要发送的数据包
@@ -20,7 +28,18 @@ void ethernet_in(buf_t *buf) {
  * @param protocol 上层协议
  */
 void ethernet_out(buf_t *buf, const uint8_t *mac, net_protocol_t protocol) {
-    // TO-DO
+    if (buf->len < ETHERNET_MIN_TRANSPORT_UNIT) {
+        buf_add_padding(buf, ETHERNET_MIN_TRANSPORT_UNIT - buf->len);
+    }
+
+    buf_add_header(buf, sizeof(ether_hdr_t));
+    ether_hdr_t *ether_hdr = (ether_hdr_t *)buf->data;
+
+    memcpy(ether_hdr->dst, mac, sizeof(ether_hdr->dst));
+    memcpy(ether_hdr->src, net_if_mac, sizeof(ether_hdr->src));
+    ether_hdr->protocol16 = protocol;
+
+    driver_send(buf);
 }
 /**
  * @brief 初始化以太网协议
