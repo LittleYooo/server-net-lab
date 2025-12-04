@@ -70,7 +70,25 @@ uint8_t ip_prefix_match(uint8_t *ipa, uint8_t *ipb) {
  * @return uint16_t 校验和
  */
 uint16_t checksum16(uint16_t *data, size_t len) {
-    // TO-DO
+    uint32_t sum = 0;
+    uint16_t *cur = data;
+    uint16_t highbit;
+    while (len > 0) {
+        if (len > 1) {
+            sum += swap16(*cur);
+            len -= 2;
+            cur++;
+        } else {
+            sum += *(uint8_t *)cur;
+            len -= 1;
+        }
+    }
+    do {
+        highbit = sum >> 16;
+        sum &= 0xFFFF;
+        sum += highbit;
+    } while (highbit);
+    return (~(uint16_t)sum);
 }
 
 #pragma pack(1)
