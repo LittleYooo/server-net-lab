@@ -132,6 +132,9 @@ uint16_t transport_checksum(uint8_t protocol, buf_t *buf, uint8_t *src_ip, uint8
     }
     checksum = checksum16((uint16_t *)buf->data, buf->len);
 
+    if (total_len & 1) {
+        buf_remove_padding(buf, 1);
+    }
     buf_remove_header(buf, sizeof(peso_hdr_t));
 
     memcpy(buf->data - sizeof(ip_hdr_t), &ip_hdr, sizeof(ip_hdr_t));
