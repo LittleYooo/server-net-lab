@@ -37,7 +37,7 @@ void ethernet_out(buf_t *buf, const uint8_t *mac, net_protocol_t protocol) {
 
     memcpy(ether_hdr->dst, mac, sizeof(ether_hdr->dst));
     memcpy(ether_hdr->src, net_if_mac, sizeof(ether_hdr->src));
-    ether_hdr->protocol16 = protocol;
+    ether_hdr->protocol16 = swap16(protocol);
 
     driver_send(buf);
 }
