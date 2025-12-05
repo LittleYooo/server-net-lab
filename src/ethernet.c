@@ -10,13 +10,12 @@
  * @param buf 要处理的数据包
  */
 void ethernet_in(buf_t *buf) {
+    if (buf->len < sizeof(ether_hdr_t)) {
+        return;
+    }
     ether_hdr_t *ether_hdr = (ether_hdr_t *)buf->data;
     uint16_t protocol = swap16(ether_hdr->protocol16);
 
-    if (protocol <= 1500 && buf->len < protocol) {
-        // protocol字段表示数据帧长度
-        return;
-    }
     buf_remove_header(buf, sizeof(ether_hdr_t));
     net_in(buf, protocol, ether_hdr->src);
 }
