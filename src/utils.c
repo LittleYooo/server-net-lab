@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include "ip.h"
 #include "net.h"
 
 #include <stdio.h>
@@ -111,5 +112,29 @@ typedef struct peso_hdr {
  * @return uint16_t 计算得到的16位校验和
  */
 uint16_t transport_checksum(uint8_t protocol, buf_t *buf, uint8_t *src_ip, uint8_t *dst_ip) {
-    // TO-DO
+    uint16_t total_len = buf->len;
+    uint16_t checksum;
+
+    ip_hdr_t ip_hdr;
+    memcpy(&ip_hdr, buf->data - sizeof(ip_hdr_t), sizeof(ip_hdr_t));
+
+    buf_add_header(buf, sizeof(peso_hdr_t));
+    peso_hdr_t *peso_hdr = (peso_hdr_t *)buf->data;
+
+    memcpy(peso_hdr->src_ip, src_ip, sizeof(peso_hdr->src_ip));
+    memcpy(peso_hdr->dst_ip, dst_ip, sizeof(peso_hdr->dst_ip));
+    peso_hdr->placeholder = 0;
+    peso_hdr->protocol = protocol;
+    peso_hdr->total_len16 = swap16(total_len);
+
+    if (total_len & 1) {
+        buf_add_padding(buf, 1);
+    }
+    checksum = checksum16((uint16_t *)buf->data, buf->len);
+
+    buf_remove_header(buf, sizeof(peso_hdr_t));
+
+    memcpy(buf->data - sizeof(ip_hdr_t), &ip_hdr, sizeof(ip_hdr_t));
+
+    return checksum;
 }
